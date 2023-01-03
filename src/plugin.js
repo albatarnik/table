@@ -1,8 +1,8 @@
-import Table from './table';
-import tableIcon from './img/tableIcon.svg';
-import withHeadings from './img/with-headings.svg';
-import withoutHeadings from './img/without-headings.svg';
-import * as $ from './utils/dom';
+import Table from "./table";
+import tableIcon from "./img/tableIcon.svg";
+import withHeadings from "./img/with-headings.svg";
+import withoutHeadings from "./img/without-headings.svg";
+import * as $ from "./utils/dom";
 
 /**
  * @typedef {object} TableConfig - configuration that the user can set for the table
@@ -58,7 +58,7 @@ export default class TableBlock {
     this.readOnly = readOnly;
     this.data = {
       withHeadings: data && data.withHeadings ? data.withHeadings : false,
-      content: data && data.content ? data.content : []
+      content: data && data.content ? data.content : [],
     };
     this.config = config;
     this.table = null;
@@ -74,7 +74,7 @@ export default class TableBlock {
   static get toolbox() {
     return {
       icon: tableIcon,
-      title: 'Table'
+      title: "Table",
     };
   }
 
@@ -99,7 +99,7 @@ export default class TableBlock {
     this.table = new Table(this.readOnly, this.api, this.data, this.config);
 
     /** creating container around table */
-    this.container = $.make('div', this.api.styles.block);
+    this.container = $.make("div", this.api.styles.block);
     this.container.appendChild(this.table.getWrapper());
 
     this.table.setHeadingsSetting(this.data.withHeadings);
@@ -162,7 +162,7 @@ export default class TableBlock {
 
     let result = {
       withHeadings: this.data.withHeadings,
-      content: tableContent
+      content: tableContent,
     };
 
     return result;
@@ -177,7 +177,9 @@ export default class TableBlock {
    * @returns {void}
    */
   toggleTune(tune, tuneButton) {
-    const buttons = tuneButton.parentNode.querySelectorAll('.' + this.api.styles.settingsButton);
+    const buttons = tuneButton.parentNode.querySelectorAll(
+      "." + this.api.styles.settingsButton
+    );
 
     // Clear other buttons
     Array.from(buttons).forEach((button) =>
@@ -191,6 +193,63 @@ export default class TableBlock {
     this.table.setHeadingsSetting(this.data.withHeadings);
   }
 
+  /**
+   * Table onPaste configuration
+   *
+   * @public
+   */
+  static get pasteConfig() {
+    return { tags: ["TABLE", "TR", "TH", "TD"] };
+  }
+
+  // eslint-disable-next-line require-jsdoc
+  pasteTable() {
+    navigator.permissions.query({ name: "clipboard-read" }).then((result) => {
+      if (result.state === "granted" || result.state === "prompt") {
+        navigator.clipboard.read().then((data) => {
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].types.includes("text/html")) {
+              data[i]
+                .getType("text/html")
+                .then((blob) => blob.text())
+                .then((html) => {
+                  const parser = new DOMParser();
+                  const doc = parser.parseFromString(html, "text/html").body;
+                  const rows = [];
+                  const trs = doc.querySelectorAll("tr");
+                  for (const tr of trs) {
+                    const tds = tr.querySelectorAll("td, th");
+                    const columns = [];
+                    for (const td of tds) {
+                      columns.push(td.innerText);
+                    }
+                    rows.push(columns);
+                  }
+                  this.data = {
+                    withHeadings: false,
+                    content: rows,
+                  };
+
+                  if (this.table.wrapper) {
+                    this.table.wrapper.replaceWith(this.render());
+                  }
+                });
+            }
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * On paste callback that is fired from Editor
+   *
+   * @param {PasteEvent} event - event with pasted data
+   */
+  onPaste(event) {
+
+    this.pasteTable();
+  }
   /**
    * Plugin destroyer
    *
