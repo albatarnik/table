@@ -1,6 +1,6 @@
 {
-  "name": "@editorjs/table",
-  "description": "Table for Editor.js",
+  "name": "@albatarnik/editorjs-table",
+  "description": "Table for Editor.js ( forked version )",
   "version": "2.0.4",
   "license": "MIT",
   "main": "./dist/table.js",
@@ -11,7 +11,7 @@
   },
   "repository": "https://github.com/editor-js/table",
   "author": {
-    "name": "CodeX Team",
+    "name": "CodeX Team, forked by Kamal Albatarni",
     "email": "team@ifmo.su"
   },
   "keywords": [
